@@ -1,0 +1,19 @@
+# Installation logs
+Install-Logs/
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# System files
+.DS_Store
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+
+# Package manager files
+*.rpm
+*.deb

@@ -1,0 +1,272 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+LRCLIB_API="https://lrclib.net/api/get"
+MAX_JOBS=4
+
+# Colores
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+if [ $# -lt 1 ]; then
+    echo "Usage: $0 \"/path/to/Music\" [--force]"
+    echo "  --force: Re-download lyrics even if .lrc file exists"
+    exit 1
+fi
+
+MUSIC_DIR="$(echo "$1" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//; s://+:/:g')"
+FORCE_REDOWNLOAD=false
+
+if [ "${2:-}" == "--force" ]; then
+    FORCE_REDOWNLOAD=true
+fi
+
+if [ ! -d "$MUSIC_DIR" ]; then
+    echo "Error: '$MUSIC_DIR' is not a directory."
+    exit 1
+fi
+
+echo -e "${BLUE}▶ Starting recursive lyrics fetch in: $MUSIC_DIR${NC}"
+if $FORCE_REDOWNLOAD; then
+    echo -e "${YELLOW}  Force mode: Will re-download existing lyrics${NC}"
+fi
+echo
+
+get_lyrics_for() {
+    local artist="$1"
+    local album="$2"
+    local title="$3"
+    local duration="$4"
+    
+    if [ -z "$duration" ] || [ "$duration" == "N/A" ]; then
+        duration=""
+    fi
+    
+    local response
+    if [ -n "$duration" ]; then
+        response=$(curl -sG \
+            --data-urlencode "artist_name=${artist}" \
+            --data-urlencode "track_name=${title}" \
+            --data-urlencode "album_name=${album}" \
+            --data-urlencode "duration=${duration}" \
+            "$LRCLIB_API" 2>/dev/null)
+    else
+        response=$(curl -sG \
+            --data-urlencode "artist_name=${artist}" \
+            --data-urlencode "track_name=${title}" \
+            --data-urlencode "album_name=${album}" \
+            "$LRCLIB_API" 2>/dev/null)
+    fi
+    
+    echo "$response" | jq -r '.syncedLyrics // empty' 2>/dev/null
+}
+
+parse_filename() {
+    local filename="$1"
+    local detected_artist=""
+    local detected_title=""
+    
+    if [[ "$filename" =~ ^([^-]+)\ -\ (.+)$ ]]; then
+        detected_artist="${BASH_REMATCH[1]}"
+        detected_title="${BASH_REMATCH[2]}"
+        
+        detected_artist="$(echo "$detected_artist" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+        detected_title="$(echo "$detected_title" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+    else
+        detected_title="$filename"
+    fi
+    
+    echo "${detected_artist}|${detected_title}"
+}
+
+fetch_for_plain() {
+    set +e
+    
+    local artist_fallback="$1"
+    local album="$2"
+    local filename="$3"
+    local duration="$4"
+    local out_lrc="$5"
+    
+    local parse_result
+    parse_result="$(parse_filename "$filename")"
+    
+    local artist_from_file="${parse_result%%|*}"
+    local title_original="${parse_result##*|}"
+    
+    local artist="$artist_fallback"
+    if [ -n "$artist_from_file" ]; then
+        artist="$artist_from_file"
+    fi
+    
+    local lyrics=""
+    local title_try="$title_original"
+    
+    # Intento 1: Con álbum
+    lyrics="$(get_lyrics_for "$artist" "$album" "$title_try" "$duration")"
+    
+    # Intento 2: Sin álbum
+    if [ -z "$lyrics" ]; then
+        lyrics="$(get_lyrics_for "$artist" "" "$title_try" "$duration")"
+    fi
+    
+    # Intento 3: Quitar paréntesis y corchetes
+    if [ -z "$lyrics" ]; then
+        local stripped
+        stripped="$(echo "$title_try" | sed -E 's/ *\([^)]*\)//g; s/ *\[[^]]*\]//g; s/^[[:space:]]+//; s/[[:space:]]+$//')"
+        if [ "$stripped" != "$title_try" ]; then
+            lyrics="$(get_lyrics_for "$artist" "$album" "$stripped" "$duration")"
+            if [ -z "$lyrics" ]; then
+                lyrics="$(get_lyrics_for "$artist" "" "$stripped" "$duration")"
+            fi
+            title_try="$stripped"
+        fi
+    fi
+    
+    # Intento 4: Sin duración
+    if [ -z "$lyrics" ] && [ -n "$duration" ]; then
+        lyrics="$(get_lyrics_for "$artist" "" "$title_original" "")"
+    fi
+    
+    # Intento 5: Con artista del directorio
+    if [ -z "$lyrics" ] && [ -n "$artist_from_file" ] && [ "$artist_from_file" != "$artist_fallback" ]; then
+        lyrics="$(get_lyrics_for "$artist_fallback" "" "$title_original" "$duration")"
+        if [ -n "$lyrics" ]; then
+            artist="$artist_fallback"
+        fi
+    fi
+    
+    if [ -z "$lyrics" ]; then
+        echo -e "${RED}    ✗ No lyrics: \"$filename\"${NC}"
+        return 0
+    fi
+    
+    {
+        echo "[ar:$artist]"
+        echo "[al:$album]"
+        echo "[ti:$title_try]"
+        echo "$lyrics" | sed -E '/^\[(ar|al|ti):/d'
+    } > "$out_lrc"
+    
+    echo -e "${GREEN}    ✔ Saved: $(basename "$out_lrc")${NC}"
+    return 0
+}
+
+# Verificar si un directorio contiene archivos de audio
+has_audio_files() {
+    local dir="$1"
+    
+    # Desactivar temporalmente la opción nounset
+    set +u
+    shopt -s nullglob
+    
+    for ext in mp3 flac m4a ogg opus wav wma aac MP3 FLAC M4A OGG OPUS WAV WMA AAC; do
+        local files=("$dir"/*.${ext})
+        if [ ${#files[@]} -gt 0 ] && [ -f "${files[0]}" ]; then
+            set -u
+            return 0
+        fi
+    done
+    
+    set -u
+    return 1
+}
+
+process_album_dir() {
+    local album_dir="$1"
+    local artist=""
+    local album=""
+    
+    # Detectar estructura: Music/Artist/Album o Music/Album
+    local parent_name="$(basename "$(dirname "$album_dir")")"
+    local music_base="$(basename "$MUSIC_DIR")"
+    
+    if [ "$parent_name" == "$music_base" ]; then
+        # Caso: Music/Album
+        artist="$(basename "$album_dir")"
+        album="$artist"
+    else
+        # Caso: Music/Artist/Album
+        artist="$parent_name"
+        album="$(basename "$album_dir")"
+    fi
+    
+    # Buscar archivos de audio
+    set +u
+    shopt -s nullglob
+    local audio_files=()
+    
+    for ext in mp3 flac m4a ogg opus wav wma aac MP3 FLAC M4A OGG OPUS WAV WMA AAC; do
+        for file in "$album_dir"/*.${ext}; do
+            if [ -f "$file" ]; then
+                audio_files+=("$file")
+            fi
+        done
+    done
+    set -u
+    
+    if [ ${#audio_files[@]} -eq 0 ]; then
+        return 0
+    fi
+    
+    echo -e "${BLUE}📁 $artist / $album${NC} (${#audio_files[@]} files)"
+    
+    local job_count=0
+    
+    for audio in "${audio_files[@]}"; do
+        TITLE_RAW="$(basename "$audio" | sed 's/\.[^.]*$//')"
+        LRC_FILE="${audio%.*}.lrc"
+        
+        if [ -f "$LRC_FILE" ] && [ "$FORCE_REDOWNLOAD" = false ]; then
+            echo -e "${YELLOW}    – Skipping: \"$TITLE_RAW\" (already have .lrc)${NC}"
+            continue
+        fi
+        
+        DURATION=$(ffprobe -v error -select_streams a:0 \
+                   -show_entries format=duration -of default=nw=1:nk=1 "$audio" 2>/dev/null || echo "")
+        DURATION=${DURATION%.*}
+        
+        fetch_for_plain "$artist" "$album" "$TITLE_RAW" "$DURATION" "$LRC_FILE" &
+        
+        ((job_count++))
+        if (( job_count >= MAX_JOBS )); then
+            wait -n || true
+            ((job_count--))
+        fi
+    done
+    
+    wait || true
+    echo
+}
+
+# Escanear estructura
+echo "🔍 Scanning directory structure..."
+
+total_albums=0
+
+# Buscar recursivamente todos los directorios con audio
+while IFS= read -r -d '' album_dir; do
+    if has_audio_files "$album_dir"; then
+        ((total_albums++))
+    fi
+done < <(find "$MUSIC_DIR" -type d -print0)
+
+if [ $total_albums -eq 0 ]; then
+    echo -e "${RED}No directories with audio files found in: $MUSIC_DIR${NC}"
+    exit 0
+fi
+
+echo -e "${GREEN}Found $total_albums directories with audio files${NC}"
+echo
+
+# Procesar cada directorio
+while IFS= read -r -d '' album_dir; do
+    if has_audio_files "$album_dir"; then
+        process_album_dir "$album_dir"
+    fi
+done < <(find "$MUSIC_DIR" -type d -print0 | sort -z)
+
+echo -e "${GREEN}✅ All done! Processed $total_albums album directories${NC}"

@@ -1,0 +1,4 @@
+# Kitty startup session - runs fastfetch on terminal open
+# Select random logo and launch fastfetch on startup
+# Use zsh if available, otherwise fall back to bash
+launch sh -c 'if command -v zsh >/dev/null 2>&1; then ~/.config/fastfetch/random-logo.sh 2>/dev/null; fastfetch 2>/dev/null; exec zsh; else ~/.config/fastfetch/random-logo.sh 2>/dev/null; fastfetch 2>/dev/null; exec bash; fi'

@@ -1,0 +1,16 @@
+; https://github.com/uiriansan/SilentSDDM
+
+[SddmGreeterTheme]
+Name=Silent - Silvia
+Type=sddm-theme
+Description=SilentSDDM theme with Silvia configuration (black & white theme)
+License=GPL-3.0-or-later
+Version=1.3.0
+Theme-Id=silent-silvia
+Theme-API=2.0
+MainScript=Main.qml
+Screenshot=docs/previews/silvia.png
+TranslationsDirectory=translations
+QtVersion=6
+
+ConfigFile=configs/silvia.conf

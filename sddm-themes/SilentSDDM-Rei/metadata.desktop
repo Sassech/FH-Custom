@@ -1,0 +1,16 @@
+; https://github.com/uiriansan/SilentSDDM
+
+[SddmGreeterTheme]
+Name=Silent - Rei
+Type=sddm-theme
+Description=SilentSDDM theme with Rei configuration (blue lavender colors)
+License=GPL-3.0-or-later
+Version=1.3.0
+Theme-Id=silent-rei
+Theme-API=2.0
+MainScript=Main.qml
+Screenshot=docs/previews/rei.png
+TranslationsDirectory=translations
+QtVersion=6
+
+ConfigFile=configs/rei.conf

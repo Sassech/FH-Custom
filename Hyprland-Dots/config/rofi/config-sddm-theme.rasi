@@ -1,0 +1,65 @@
+/* SDDM Theme Selector Config */
+
+@import "~/.config/rofi/config.rasi"  
+
+/* ---- Configuration ---- */ 
+configuration {
+  modi: "drun";
+}
+
+window {
+  width: 60%;
+  height: inherit;
+}
+
+/* ---- Mainbox ---- */
+mainbox {
+  children:
+    [ "inputbar", "listview"];
+}
+
+entry {
+  expand: true;
+  placeholder: " 🎨 Search / Choose SDDM Theme";
+  horizontal-align: 0.5;
+}
+
+/* ---- Listview ---- */
+listview {
+  columns: 4;
+  lines: 2;
+  spacing: 20px;
+  padding: 10px;
+  flow: horizontal;
+  fixed-width: true;
+  fixed-height: true;
+  cycle: true;
+}
+
+/* ---- Element ---- */
+element {
+  orientation: vertical;
+  padding: 10px;
+  spacing: 5px;
+  border-radius: 10px;
+  margin: 5px;
+}
+
+element selected.normal {
+  background-color: @selected-normal-background;
+  text-color: @selected-normal-foreground;
+}
+
+element-icon {
+  text-color: inherit;
+  size: 18%;
+  cursor: inherit;
+  border-radius: 5px;
+}
+
+element-text {
+  vertical-align: 0.5;
+  horizontal-align: 0.5;
+  padding: 6px;
+  margin: 3px;
+}

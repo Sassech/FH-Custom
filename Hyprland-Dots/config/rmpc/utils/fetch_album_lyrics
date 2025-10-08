@@ -1,0 +1,227 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Usage: fetch_album_lyrics_full.sh "/path/to/Artist/Album"
+# Requires: curl, jq, ffprobe (from ffmpeg)
+# Max concurrent fetches: MAX_JOBS
+#  ffprobe -v error -select_streams a:0 -show_entries stream=duration -of default=nw=1:nk=1 'Symphony Of The Night.mp3'
+
+
+
+
+
+
+
+
+#!/usr/bin/env bash
+set -euo pipefail
+
+LRCLIB_API="https://lrclib.net/api/get"
+MAX_JOBS=4
+
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 \"/path/to/Artist/Album\""
+    exit 1
+fi
+
+ALBUM_DIR="$(echo "$1" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//; s://+:/:g')"
+
+if [ ! -d "$ALBUM_DIR" ]; then
+    echo "Error: '$ALBUM_DIR' is not a directory."
+    exit 1
+fi
+
+PARENT="$(basename "$(dirname "$ALBUM_DIR")")"
+if [ "$PARENT" == "Music" ]; then
+    ARTIST="$(basename "$ALBUM_DIR")"
+    ALBUM="$ARTIST"
+else
+    ARTIST="$PARENT"
+    ALBUM="$(basename "$ALBUM_DIR")"
+fi
+
+echo "▶ Fetching lyrics for all audio files in: $ALBUM_DIR"
+echo "  Artist: $ARTIST"
+echo "  Album:  $ALBUM"
+echo
+
+get_lyrics_for() {
+    local artist="$1"
+    local album="$2"
+    local title="$3"
+    local duration="$4"
+    
+    if [ -z "$duration" ] || [ "$duration" == "N/A" ]; then
+        duration=""
+    fi
+    
+    local response
+    if [ -n "$duration" ]; then
+        response=$(curl -sG \
+            --data-urlencode "artist_name=${artist}" \
+            --data-urlencode "track_name=${title}" \
+            --data-urlencode "album_name=${album}" \
+            --data-urlencode "duration=${duration}" \
+            "$LRCLIB_API")
+    else
+        response=$(curl -sG \
+            --data-urlencode "artist_name=${artist}" \
+            --data-urlencode "track_name=${title}" \
+            --data-urlencode "album_name=${album}" \
+            "$LRCLIB_API")
+    fi
+    
+    echo "$response" | jq -r '.syncedLyrics // empty'
+}
+
+# Nueva función para extraer artista y título del nombre del archivo
+parse_filename() {
+    local filename="$1"
+    local detected_artist=""
+    local detected_title=""
+    
+    # Verificar si tiene formato "Artista - Canción"
+    if [[ "$filename" =~ ^([^-]+)\ -\ (.+)$ ]]; then
+        detected_artist="${BASH_REMATCH[1]}"
+        detected_title="${BASH_REMATCH[2]}"
+        
+        # Limpiar espacios
+        detected_artist="$(echo "$detected_artist" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+        detected_title="$(echo "$detected_title" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+    else
+        # No tiene el separador, usar el nombre completo como título
+        detected_title="$filename"
+    fi
+    
+    echo "${detected_artist}|${detected_title}"
+}
+
+fetch_for_plain() {
+    set +e
+    
+    local artist_fallback="$1"
+    local album="$2"
+    local filename="$3"
+    local duration="$4"
+    local out_lrc="$5"
+    
+    # Parsear el nombre del archivo
+    local parse_result
+    parse_result="$(parse_filename "$filename")"
+    
+    local artist_from_file="${parse_result%%|*}"
+    local title_original="${parse_result##*|}"
+    
+    # Decidir qué artista usar
+    local artist="$artist_fallback"
+    if [ -n "$artist_from_file" ]; then
+        artist="$artist_from_file"
+        echo "  → Detected artist from filename: '$artist'"
+    fi
+    
+    local lyrics=""
+    local title_try="$title_original"
+    
+    echo "  → Searching: Artist='$artist', Title='$title_try'"
+    
+    # Intento 1: Con álbum
+    lyrics="$(get_lyrics_for "$artist" "$album" "$title_try" "$duration")"
+    
+    # Intento 2: Sin álbum
+    if [ -z "$lyrics" ]; then
+        lyrics="$(get_lyrics_for "$artist" "" "$title_try" "$duration")"
+    fi
+    
+    # Intento 3: Quitar paréntesis y corchetes
+    if [ -z "$lyrics" ]; then
+        local stripped
+        stripped="$(echo "$title_try" | sed -E 's/ *\([^)]*\)//g; s/ *\[[^]]*\]//g; s/^[[:space:]]+//; s/[[:space:]]+$//')"
+        if [ "$stripped" != "$title_try" ]; then
+            echo "  → Trying without parentheses: '$stripped'"
+            lyrics="$(get_lyrics_for "$artist" "$album" "$stripped" "$duration")"
+            if [ -z "$lyrics" ]; then
+                lyrics="$(get_lyrics_for "$artist" "" "$stripped" "$duration")"
+            fi
+            title_try="$stripped"
+        fi
+    fi
+    
+    # Intento 4: Sin duración
+    if [ -z "$lyrics" ] && [ -n "$duration" ]; then
+        echo "  → Trying without duration"
+        lyrics="$(get_lyrics_for "$artist" "" "$title_original" "")"
+    fi
+    
+    # Intento 5: Si había artista en el filename, probar con el artista del directorio
+    if [ -z "$lyrics" ] && [ -n "$artist_from_file" ] && [ "$artist_from_file" != "$artist_fallback" ]; then
+        echo "  → Trying with folder artist: '$artist_fallback'"
+        lyrics="$(get_lyrics_for "$artist_fallback" "" "$title_original" "$duration")"
+        if [ -n "$lyrics" ]; then
+            artist="$artist_fallback"
+        fi
+    fi
+    
+    if [ -z "$lyrics" ]; then
+        echo "✗ No lyrics found for: \"$filename\""
+        return 0
+    fi
+    
+    {
+        echo "[ar:$artist]"
+        echo "[al:$album]"
+        echo "[ti:$title_try]"
+        echo "$lyrics" | sed -E '/^\[(ar|al|ti):/d'
+    } > "$out_lrc"
+    
+    echo "✔ Saved lyrics: $(basename "$out_lrc")"
+    return 0
+}
+
+shopt -s nullglob
+
+mapfile -t audio_files < <(
+    find "$ALBUM_DIR" -maxdepth 1 -type f | while read -r f; do
+        if ffprobe -v error -select_streams a:0 -show_entries format=format_name -of default=nw=1:nk=1 "$f" &>/dev/null; then
+            echo "$f"
+        fi
+    done
+)
+
+if [ ${#audio_files[@]} -eq 0 ]; then
+    echo "No audio files found in: $ALBUM_DIR"
+    exit 0
+fi
+
+echo "Found ${#audio_files[@]} audio file(s)"
+echo
+
+job_count=0
+for audio in "${audio_files[@]}"; do
+    # Remover extensión
+    TITLE_RAW="$(basename "$audio" | sed 's/\.[^.]*$//')"
+    LRC_FILE="${audio%.*}.lrc"
+    
+    if [ -f "$LRC_FILE" ]; then
+        echo "– Skipping \"$TITLE_RAW\" (already have .lrc)"
+        continue
+    fi
+    
+    DURATION=$(ffprobe -v error -select_streams a:0 \
+               -show_entries format=duration -of default=nw=1:nk=1 "$audio" 2>/dev/null || echo "")
+    DURATION=${DURATION%.*}
+    
+    echo "Processing: $TITLE_RAW"
+    
+    fetch_for_plain "$ARTIST" "$ALBUM" "$TITLE_RAW" "$DURATION" "$LRC_FILE" &
+    
+    ((job_count++))
+    if (( job_count >= MAX_JOBS )); then
+        wait -n || true
+        ((job_count--))
+    fi
+done
+
+wait || true
+
+echo
+echo "✅ All done."

@@ -1,0 +1,78 @@
+[
+	{
+		"include": [
+			"$HOME/.config/waybar/Modules",
+			"$HOME/.config/waybar/ModulesWorkspaces",
+			"$HOME/.config/waybar/ModulesCustom",
+			"$HOME/.config/waybar/ModulesGroups",
+			"$HOME/.config/waybar/UserModules"
+		],
+		"layer": "top",
+		"exclusive": true,
+		"passthrough": false,
+		"position": "top",
+		"spacing": 3,
+		"fixed-center": true,
+		"ipc": true,
+		"margin-top": 1,
+		"margin-left": 0,
+		"margin-right": 0,
+		"modules-left": [
+			"cpu",
+			"temperature#cpu",
+			"temperature#gpu",
+			"memory",
+			"disk"
+		],
+		"modules-center": [
+			"idle_inhibitor",
+			"clock",
+			"custom/light_dark",
+			"custom/separator#blank",
+			"custom/hint",
+			"custom/cava_mviz",
+			"custom/separator#blank",
+			"custom/playerctl"
+		],
+		"modules-right": [
+			"custom/weather",
+			"mpris",
+			"battery",
+			"tray",
+			"custom/updater",
+			"custom/power"
+		]
+	},
+	{
+		"include": [
+			"$HOME/.config/waybar/Modules",
+			"$HOME/.config/waybar/ModulesWorkspaces",
+			"$HOME/.config/waybar/ModulesCustom",
+			"$HOME/.config/waybar/ModulesGroups",
+			"$HOME/.config/waybar/UserModules"
+		],
+		"layer": "top",
+		"exclusive": true,
+		"passthrough": false,
+		"position": "bottom",
+		"spacing": 5,
+		"fixed-center": true,
+		"ipc": true,
+		"height": 0,
+		"margin-bottom": 1,
+		"margin-left": 0,
+		"margin-right": 0,
+		"modules-left": [
+			"custom/menu",
+			"hyprland/window"
+		],
+		"modules-center": [
+			"hyprland/workspaces"
+		],
+		"modules-right": [
+			"backlight",
+			"pulseaudio",
+			"pulseaudio#microphone","custom/swaync"
+		]
+	}
+]

@@ -1,0 +1,18 @@
+sw_volume: 100
+audio_device_state:1:PipeWire Sound Server
+audio_device_state:1:my_fifo
+state: play
+current: 1
+time: 120.32000000000001
+random: 1
+repeat: 0
+single: 0
+consume: 0
+crossfade: 0
+mixrampdb: 0
+mixrampdelay: -1
+lastloadedplaylist: 
+playlist_begin
+0:Illit/I' LL LIKE YOU/ILLIT  - Cherish (My Love).flac
+1:Illit/I' LL LIKE YOU/ILLIT  - Tick-Tack.flac
+playlist_end
