@@ -98,19 +98,6 @@
 		"exec": "$HOME/.config/hypr/scripts/WaybarCava.sh",
 		"format": "{}"
 	},
-	"custom/playerctl": {
-		"format": "<span>{}</span>",
-		"return-type": "json",
-		"max-length": 25,
-		"exec": "playerctl -a metadata --format '{\"text\": \"{{artist}}  {{markup_escape(title)}}\", \"tooltip\": \"{{playerName}} : {{markup_escape(title)}}\", \"alt\": \"{{status}}\", \"class\": \"{{status}}\"}' -F",
-		"on-click-middle": "playerctl play-pause",
-		"on-click": "playerctl previous",
-		"on-click-right": "playerctl next",
-		"scroll-step": 5.0,
-		"on-scroll-up": "$HOME/.config/hypr/scripts/Volume.sh --inc",
-		"on-scroll-down": "$HOME/.config/hypr/scripts/Volume.sh --dec",
-		"smooth-scrolling-threshold": 1
-	},
 	"custom/power": {
 		"format": " ⏻ ",
 		"on-click": "$HOME/.config/hypr/scripts/Wlogout.sh",

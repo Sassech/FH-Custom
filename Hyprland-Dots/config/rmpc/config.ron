@@ -78,7 +78,7 @@ cava: (
             "<S-Tab>": PreviousTab,
             "1":       SwitchToTab("Lyrics"),
             "2":       SwitchToTab("Queue"),
-   	    "3":       SwitchToTab("Directories"),
+   	        "3":       SwitchToTab("Directories"),
             "4":       SwitchToTab("Artists"),
             "5":       SwitchToTab("Albums"),
             "6":       SwitchToTab("Search"),
