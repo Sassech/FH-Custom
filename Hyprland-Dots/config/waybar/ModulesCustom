@@ -97,14 +97,13 @@
 		"format": "{}"
 	},
 	"custom/playerctl": {
-		"format": " {}",
+		"format": "<span>{}</span>",
 		"return-type": "json",
-		"max-length": 50,
-		"exec": "playerctl -F metadata --format '{\"text\":\"{{artist}} - {{title}}\",\"tooltip\":\"{{playerName}}: {{album}}\",\"alt\":\"{{status}}\",\"class\":\"{{status}}\"}' 2>/dev/null",
+		"max-length": 25,
+		"exec": "playerctl -a metadata --format '{\"text\": \"{{artist}}  {{markup_escape(title)}}\", \"tooltip\": \"{{playerName}} : {{markup_escape(title)}}\", \"alt\": \"{{status}}\", \"class\": \"{{status}}\"}' -F",
 		"on-click-middle": "playerctl play-pause",
 		"on-click": "playerctl previous",
 		"on-click-right": "playerctl next",
-		"tooltip": true,
 		"scroll-step": 5.0,
 		"on-scroll-up": "$HOME/.config/hypr/scripts/Volume.sh --inc",
 		"on-scroll-down": "$HOME/.config/hypr/scripts/Volume.sh --dec",

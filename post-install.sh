@@ -161,19 +161,19 @@ fi
 echo "${OK} TLP installed and configured!" | tee -a "$LOG"
 printf "\n%.0s" {1..1}
 
-# 08 Install mpDris2 for media controls in Hyprland
-echo "${INFO} Installing mpDris2 for media controls in Hyprland..." | tee -a "$LOG"
-# Install dependencies
-sudo dnf install mpdris2 -y 2>&1 | tee -a "$LOG"
-# Enable MPD service first
-systemctl --user enable --now mpd 2>&1 | tee -a "$LOG"
-# Wait for MPD to start
-sleep 2
-# Enable mpDris2 service (note: service name is lowercase)
-systemctl --user enable --now mpDris2 2>&1 | tee -a "$LOG"
-echo "${OK} mpDris2 installed and enabled!" | tee -a "$LOG"
+# # 08 Install mpDris2 for media controls in Hyprland
+# echo "${INFO} Installing mpDris2 for media controls in Hyprland..." | tee -a "$LOG"
+# # Install dependencies
+# sudo dnf install mpdris2 -y 2>&1 | tee -a "$LOG"
+# # Enable MPD service first
+# systemctl --user enable --now mpd 2>&1 | tee -a "$LOG"
+# # Wait for MPD to start
+# sleep 2
+# # Enable mpDris2 service (note: service name is lowercase)
+# systemctl --user enable --now mpDris2 2>&1 | tee -a "$LOG"
+# echo "${OK} mpDris2 installed and enabled!" | tee -a "$LOG"
 
-# 8. Change hostname
+# 9. Change hostname
 NEW_HOSTNAME=$(whiptail --inputbox "Enter new hostname for this computer:" 8 60 "fedora-hyprland" 3>&1 1>&2 2>&3)
 if [ -n "$NEW_HOSTNAME" ]; then
     echo "${INFO} Changing hostname to ${NEW_HOSTNAME}..." | tee -a "$LOG"
