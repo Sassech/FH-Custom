@@ -6,7 +6,7 @@
 		"interval": 3600,
 		"return-type": "json",
 		"exec": "$HOME/.config/hypr/UserScripts/Weather.py",
-		"exec-if": "ping wttr.in -c1",
+		// "exec-if": "ping wttr.in -c1",
 		"tooltip": true
 	},
 	"custom/hyprpicker": {

@@ -35,7 +35,6 @@
 			"custom/playerctl"
 		],
 		"modules-right": [
-			"mpris",
 			"battery",
 			"tray",
 			"custom/updater",
@@ -66,7 +65,7 @@
 			"hyprland/window"
 		],
 		"modules-center": [
-			"hyprland/workspaces"
+			"hyprland/workspaces#numbers"
 		],
 		"modules-right": [
 			"custom/weather",

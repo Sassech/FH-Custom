@@ -20,7 +20,7 @@
 			"🔥"
 		],
 		"tooltip-format": "CPU Temperature: {temperatureC}°C",
-		"on-click-right": "$HOME/.config/hypr/scripts/WaybarScripts.sh --nvtop"
+		"on-click-right": "$HOME/.config/hypr/scripts/WaybarScripts.sh --btop"
 	},
 	// GPU Temperature - thermal_zone5 (TVGA) and thermal_zone3 (VRAM)
 	"temperature#gpu": {
@@ -249,7 +249,8 @@
 			"mopidy": "",
 			"mpv": "󰐹",
 			"spotify": "",
-			"vlc": "󰕼"
+			"vlc": "󰕼",
+			"rmpc": " "
 		},
 		"status-icons": {
 			"paused": "󰐎",

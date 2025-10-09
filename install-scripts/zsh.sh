@@ -51,13 +51,13 @@ if command -v zsh >/dev/null; then
   
   # Install plugins and themes directly (minimal installation - always install)
   printf "${NOTE} Installing zsh-autosuggestions plugin...\n"
-  git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions 2>&1 | tee -a "$LOG" || echo "${INFO} zsh-autosuggestions already installed." 2>&1 | tee -a "$LOG"
+  git clone https://github.com/zsh-users/zsh-autosuggestions $HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions 2>&1 | tee -a "$LOG" || echo "${INFO} zsh-autosuggestions already installed." 2>&1 | tee -a "$LOG"
 
   printf "${NOTE} Installing zsh-syntax-highlighting plugin...\n"
-  git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting 2>&1 | tee -a "$LOG" || echo "${INFO} zsh-syntax-highlighting already installed." 2>&1 | tee -a "$LOG"
+  git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting 2>&1 | tee -a "$LOG" || echo "${INFO} zsh-syntax-highlighting already installed." 2>&1 | tee -a "$LOG"
 
   printf "${NOTE} Installing Powerlevel10k theme...\n"
-  git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k 2>&1 | tee -a "$LOG" || echo "${INFO} Powerlevel10k already installed." 2>&1 | tee -a "$LOG"
+  git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $HOME/.oh-my-zsh/themes/powerlevel10k 2>&1 | tee -a "$LOG" || echo "${INFO} Powerlevel10k already installed." 2>&1 | tee -a "$LOG"
 
   # Copy configuration files directly (always overwrite)
   printf "${NOTE} Installing zsh configuration files...\n"
