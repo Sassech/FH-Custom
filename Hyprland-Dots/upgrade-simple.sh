@@ -20,15 +20,9 @@ SKY_BLUE="$(tput setaf 6)"
 RESET="$(tput sgr0)"
 
 printf "\n%.0s" {1..1}  
-echo -e "\e[35m
-    ╦╔═┌─┐┌─┐╦    ╔╦╗┌─┐┌┬┐┌─┐
-    ╠╩╗│ ││ │║     ║║│ │ │ └─┐ 2025
-    ╩ ╩└─┘└─┘╩═╝  ═╩╝└─┘ ┴ └─┘ upgrade.sh
-\e[0m"
-printf "\n%.0s" {1..1}  
 
 echo "${WARNING}A T T E N T I O N !${RESET}"
-echo "${SKY_BLUE}This script is meant to manually upgrade your KooL Hyprland Dots${RESET}"
+echo "${SKY_BLUE}This script is meant to manually upgrade your Dots${RESET}"
 echo "${YELLOW}NOTE that you should edit this script and assign an Directory or Files exclusion${RESET}"
 printf "\n%.0s" {1..1}
 echo "${MAGENTA}If you are not sure what you are doing,ran the ${SKY_BLUE}copy.sh${RESET} ${MAGENTA}instead${RESET}"
@@ -49,139 +43,117 @@ fi
 
 LOG="Upgrade-Logs/upgrade-$(date +%d-%H%M%S)_upgrade_dotfiles.log"
 
+# Create a single backup directory with timestamp
+BACKUP_TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+BACKUP_MAIN_DIR="$HOME/.config/backup-before-upgrade-${BACKUP_TIMESTAMP}"
+echo "${NOTE} Main backup directory will be: ${BACKUP_MAIN_DIR}" 2>&1 | tee -a "$LOG"
+
 # source and target versions
 source_dir="config"
 target_dir="$HOME/.config"
 
-# Specify the update source directories, their corresponding target directories, and their exclusions
+# Specify all directories to backup and copy
 declare -A directories=(
-    ["config/hypr/"]="$HOME/.config/hypr/"
-    ["config/kitty/"]="$HOME/.config/kitty/"
-    ["config/Kvantum/"]="$HOME/.config/Kvantum/"
-    ["config/nvim/"]="$HOME/.config/nvim/"
-    ["config/qt5ct/"]="$HOME/.config/qt5ct"
-    ["config/qt6ct/"]="$HOME/.config/qt6ct/"
-    ["config/rofi/"]="$HOME/.config/rofi/"
-    ["config/swaync/"]="$HOME/.config/swaync/"
-    ["config/waybar/"]="$HOME/.config/waybar/"
-    ["config/cava/"]="$HOME/.config/cava/"
-    ["config/fastfetch/"]="$HOME/.config/fastfetch/"
-    ["config/wallust/"]="$HOME/.config/wallust/"
-    ["config/wlogout/"]="$HOME/.config/wlogout/"
-    # Add more directories to compare as needed
+    ["config/btop"]="$HOME/.config/btop"
+    ["config/cava"]="$HOME/.config/cava"
+    ["config/fastfetch"]="$HOME/.config/fastfetch"
+    ["config/hypr"]="$HOME/.config/hypr"
+    ["config/kitty"]="$HOME/.config/kitty"
+    ["config/Kvantum"]="$HOME/.config/Kvantum"
+    ["config/micro"]="$HOME/.config/micro"
+    ["config/mpd"]="$HOME/.config/mpd"
+    ["config/qt5ct"]="$HOME/.config/qt5ct"
+    ["config/qt6ct"]="$HOME/.config/qt6ct"
+    ["config/quickshell"]="$HOME/.config/quickshell"
+    ["config/rmpc"]="$HOME/.config/rmpc"
+    ["config/rofi"]="$HOME/.config/rofi"
+    ["config/swaync"]="$HOME/.config/swaync"
+    ["config/wallust"]="$HOME/.config/wallust"
+    ["config/waybar"]="$HOME/.config/waybar"
+    ["config/wlogout"]="$HOME/.config/wlogout"
 )
 
-# Update the exclusion rules
-declare -A exclusions=(
-    ["config/hypr/"]="--exclude=UserConfigs/ --exclude=UserScripts/"
-    ["config/waybar/"]="--exclude=config --exclude=style.css"
-    ["config/rofi/"]="--exclude=.current_wallpaper"
-    # Add more exclusions as needed
+# Specify root files and wallpapers to copy
+declare -A root_items=(
+
 )
 
-# Function to compare directories
-compare_directories() {
+# Function to create backup and copy new files
+backup_and_copy() {
     local source_dir="$1"
     local target_dir="$2"
-    local exclusion="${exclusions[$source_dir]}"  # Get exclusions for the source directory
-
-    # Perform dry-run comparison using rsync with exclusions
-    diff=$(rsync -avn --delete "$source_dir" "$target_dir" $exclusion)
-    echo "$diff"
-}
-
-# Function to create backup of target directory
-create_backup() {
-    local target_dir="$1"
-    local backup_suffix="-b4-upgrade"
     local target_base=$(basename "$target_dir")
-    local backup_dir="$HOME/.config/${target_base}${backup_suffix}"
+    local backup_subdir="${BACKUP_MAIN_DIR}/${target_base}"
 
-    if [ -d "$backup_dir" ]; then
-        echo "$NOTE Updating existing backup of the $target_dir..."
-        rsync -av --delete "$target_dir" "$backup_dir"
-        echo "$NOTE $backup_dir Backup updated successfully." 2>&1 | tee -a "$LOG"
-    else
-        echo "$NOTE Creating backup of the $target_dir..."
-        rsync -av --exclude="${backup_suffix}" "$target_dir" "$backup_dir"/
-        echo "$NOTE $backup_dir Backup created successfully." 2>&1 | tee -a "$LOG"
+    # Create main backup directory if it doesn't exist
+    if [ ! -d "$BACKUP_MAIN_DIR" ]; then
+        mkdir -p "$BACKUP_MAIN_DIR"
     fi
+
+    # Check if target directory exists and backup
+    if [ -d "$target_dir" ]; then
+        mv "$target_dir" "$backup_subdir" 2>&1 | tee -a "$LOG"
+    fi
+    
+    # Copy new files from source to target (without exclusions)
+    mkdir -p "$target_dir"
+    rsync -a "$source_dir/" "$target_dir/" 2>&1 | tee -a "$LOG"
+    echo "$OK $target_base copied successfully" 2>&1 | tee -a "$LOG"
 }
 
-# Check if the version file exists in target directory, if not exit
-target_version_file=$(find "$target_dir/hypr" -name 'v*' | sort -V | tail -n 1)
-if [ -z "$target_version_file" ]; then
-    echo "$ERROR Version number not found in ~/.config/hypr/" 2>&1 | tee -a "$LOG"
-    echo "$ERROR Upgrade your dots first by running ./copy.sh" 2>&1 | tee -a "$LOG"
-    exit 1
-fi
+# Loop through directories and backup/copy
+echo "$INFO Starting backup and copy process..." 2>&1 | tee -a "$LOG"
+printf "\n%.0s" {1..1}
 
-# Get the stored version from the target directory
-stored_version=$(basename "$target_version_file")
+for source_directory in "${!directories[@]}"; do
+    target_directory="${directories[$source_directory]}"
+    backup_and_copy "$source_directory" "$target_directory"
+done
 
-# Get the latest version from the source directory
-source_version_file=$(find "$source_dir/hypr" -name 'v*' | sort -V | tail -n 1)
-latest_version=$(basename "$source_version_file")
+printf "\n%.0s" {1..1}
+echo "$OK All config directories updated successfully!" 2>&1 | tee -a "$LOG"
 
-# Function to compare versions
-version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"; }
+# Copy root files and wallpapers
+echo "$INFO Copying root files and wallpapers..." 2>&1 | tee -a "$LOG"
 
-# Compare versions
-if version_gt "$latest_version" "$stored_version"; then
-    echo "$CAT newer version ($latest_version) is available. Do you want to upgrade? (Y/N)" 2>&1 | tee -a "$LOG"
-    read -r answer
-    if [[ "$answer" =~ ^[Yy]$ ]]; then
-        # Loop through directories for comparison
-		for source_directory in "${!directories[@]}"; do
-    	target_directory="${directories[$source_directory]}"
-    	echo "$YELLOW Comparing directories: $source_directory and $target_directory" $RESET    
-    	# Compare source and target directories
-    	comparison=$(compare_directories "$source_directory" "$target_directory")
-    	if [ -n "$comparison" ]; then
-        echo "$NOTE Here are difference of $source_directory and $target_directory:"
-        echo "$comparison"
-        
-        printf "\n%.0s" {1..2}
-        
-        # Prompt user for action
-        echo "$CAT Do you want to copy files and directories from $source_directory to $target_directory? (Y/N)"
-        read -r answer
-
-        if [[ "$answer" =~ ^[Yy]$ ]]; then
-            # Creating backup of the target directory
-            create_backup "$target_directory"
-            
-            printf "\n%.0s" {1..2}
-            # Copy differences from source directory to target directory
-            rsync -av --delete ${exclusions[$source_directory]} "$source_directory" "$target_directory"
-            echo "$NOTE Differences of "$target_directory" copied successfully." 2>&1 | tee -a "$LOG"
-            printf "\n%.0s" {1..2}
+for source_item in "${!root_items[@]}"; do
+    target_item="${root_items[$source_item]}"
+    item_base=$(basename "$target_item")
+    
+    # Backup if exists
+    if [ -e "$target_item" ]; then
+        backup_location="${BACKUP_MAIN_DIR}/$(basename "$target_item")"
+        if [ -d "$target_item" ]; then
+            rsync -a "$target_item/" "$backup_location/" 2>&1 | tee -a "$LOG"
         else
-            	echo "$NOTE No changes were made for $target_directory" 2>&1 | tee -a "$LOG"
-        	fi
-    	else
-        	echo "$OK No differences found between $source_directory and $target_directory" 2>&1 | tee -a "$LOG"
-    	fi
-		done
-		printf "\n%.0s" {1..2}
-        echo "$NOTE Files or directories updated successfully to version $latest_version" 2>&1 | tee -a "$LOG"
-
-        # Set some files as executable
-        chmod +x "$HOME/.config/hypr/scripts/"* 2>&1 | tee -a "$LOG"
-        chmod +x "$HOME/.config/hypr/UserScripts/"* 2>&1 | tee -a "$LOG"
-        # Set executable for initial-boot.sh
-        chmod +x "$HOME/.config/hypr/initial-boot.sh" 2>&1 | tee -a "$LOG"		
-    else
-        echo "$MAGENTA Upgrade declined. No files or directories changed" 2>&1 | tee -a "$LOG"
+            cp "$target_item" "$backup_location" 2>&1 | tee -a "$LOG"
+        fi
     fi
-else
-    echo "$OK 👌 No upgrade found. The installed version ${MAGENTA}($stored_version)${RESET} is up to date with the KooL Hyprland-Dots version ${YELLOW}($latest_version)${RESET}" 2>&1 | tee -a "$LOG"
-fi
+    
+    # Copy new files
+    if [ -d "$source_item" ]; then
+        mkdir -p "$target_item"
+        rsync -a "$source_item/" "$target_item/" 2>&1 | tee -a "$LOG"
+    else
+        cp "$source_item" "$target_item" 2>&1 | tee -a "$LOG"
+    fi
+    echo "$OK $item_base copied successfully" 2>&1 | tee -a "$LOG"
+done
+
+printf "\n%.0s" {1..1}
+echo "$OK All root files updated successfully!" 2>&1 | tee -a "$LOG"
+
+# Set some files as executable
+chmod +x "$HOME/.config/hypr/scripts/"* 2>&1 | tee -a "$LOG"
+chmod +x "$HOME/.config/hypr/UserScripts/"* 2>&1 | tee -a "$LOG"
+chmod +x "$HOME/.config/hypr/initial-boot.sh" 2>&1 | tee -a "$LOG"
+echo "$OK Permissions set successfully" 2>&1 | tee -a "$LOG"
 
 printf "\n%.0s" {1..3}
 echo "$(tput bold)$(tput setaf 3)ATTENTION!!!! VERY IMPORTANT NOTICE!!!! $(tput sgr0)" 
 echo "$(tput bold)$(tput setaf 7)If you updated waybar directory, and you have your own waybar layout and styles $(tput sgr0)"
-echo "$(tput bold)$(tput setaf 7)Copy those files from the created backup ~/.config/waybar-b4-upgrade $(tput sgr0)"
+echo "$(tput bold)$(tput setaf 7)Copy those files from the backup: ${BACKUP_MAIN_DIR}/waybar/ $(tput sgr0)"
+echo "$(tput bold)$(tput setaf 7)All your backups are in: ${BACKUP_MAIN_DIR} $(tput sgr0)"
 echo "$(tput bold)$(tput setaf 7)Make sure to set your waybar and style before logout or reboot $(tput sgr0)"
 echo "$(tput bold)$(tput setaf 7)SUPER CTRL B for Waybar Styles and SUPER ALT B for Waybar Layout $(tput sgr0)"
 printf "\n%.0s" {1..3}
