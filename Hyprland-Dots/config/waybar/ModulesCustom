@@ -6,7 +6,7 @@
 		"interval": 3600,
 		"return-type": "json",
 		"exec": "$HOME/.config/hypr/UserScripts/Weather.py",
-		//"exec-if": "ping wttr.in -c1",
+		"exec-if": "ping wttr.in -c1",
 		"tooltip": true
 	},
 	"custom/hyprpicker": {
@@ -54,7 +54,6 @@
 		"tooltip": true,
 		"tooltip-format": "Left Click: Quick Tips\nRight Click: Keybinds"
 	},
-	// Hypridle inhibitor
 	"custom/hypridle": {
 		"format": "󱫗 ",
 		"return-type": "json",
@@ -93,10 +92,22 @@
 		"tooltip": true,
 		"tooltip-format": "Left Click: Rofi Menu\nMiddle Click: Wallpaper Menu\nRight Click: Waybar Layout Menu"
 	},
-	// This is a custom cava visualizer
 	"custom/cava_mviz": {
 		"exec": "$HOME/.config/hypr/scripts/WaybarCava.sh",
 		"format": "{}"
+	},
+	"custom/playerctl": {
+		"format": "<span>{}</span>",
+		"return-type": "json",
+		"max-length": 25,
+		"exec": "playerctl -a metadata --format '{\"text\": \"{{artist}}  {{markup_escape(title)}}\", \"tooltip\": \"{{playerName}} : {{markup_escape(title)}}\", \"alt\": \"{{status}}\", \"class\": \"{{status}}\"}' -F",
+		"on-click-middle": "playerctl play-pause",
+		"on-click": "playerctl previous",
+		"on-click-right": "playerctl next",
+		"scroll-step": 5.0,
+		"on-scroll-up": "$HOME/.config/hypr/scripts/Volume.sh --inc",
+		"on-scroll-down": "$HOME/.config/hypr/scripts/Volume.sh --dec",
+		"smooth-scrolling-threshold": 1
 	},
 	"custom/power": {
 		"format": " ⏻ ",
@@ -138,7 +149,6 @@
 		"on-click-right": "swaync-client -d -sw",
 		"escape": true
 	},
-	// Separators
 	"custom/separator#dot": {
 		"format": "",
 		"interval": "once",

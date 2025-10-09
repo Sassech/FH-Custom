@@ -35,7 +35,6 @@
 			"custom/playerctl"
 		],
 		"modules-right": [
-			"custom/weather",
 			"mpris",
 			"battery",
 			"tray",
@@ -70,9 +69,11 @@
 			"hyprland/workspaces"
 		],
 		"modules-right": [
+			"custom/weather",
 			"backlight",
 			"pulseaudio",
-			"pulseaudio#microphone","custom/swaync"
+			"pulseaudio#microphone",
+			"custom/swaync"
 		]
 	}
 ]
