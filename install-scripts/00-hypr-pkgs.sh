@@ -10,11 +10,8 @@ Extra=(
   # iwlwifi-mvm-firmware.noarch
   # alsa-sof-firmware
   micro # terminal text editor (optional, but recommended)
-  mpc # Used to control mpd (optional, but recommended)
-  mpd # music player daemon used by rmpc (optional, but recommended)
   flac # FLAC audio codec (optional, but recommended if you use mpd
   pixiewps # for wifi (optional, but recommended)
-
 )
 
 # packages neeeded
@@ -33,7 +30,6 @@ hypr_package=(
   jq
   kitty
   kvantum
-  nano
   network-manager-applet
   openssl
   pamixer
@@ -91,6 +87,7 @@ uninstall=(
   dunst
   mako
   rofi
+  nano
 )
 
 ## WARNING: DO NOT EDIT BEYOND THIS LINE IF YOU DON'T KNOW WHAT YOU ARE DOING! ##
