@@ -185,6 +185,18 @@ printf "\n%.0s" {1..1}
 echo "${OK} Mandatory installations completed!" | tee -a "$LOG"
 printf "\n%.0s" {1..2}
 
+# power-profiles-daemon for power profile management
+echo "${INFO} Installing power-profiles-daemon..." | tee -a "$LOG"
+sudo dnf install -y power-profiles-daemon 2>&1 | tee -a "$LOG"
+# Enable and start service
+sudo systemctl enable --now power-profiles-daemon 2>&1 | tee -a "$LOG"
+# Check status
+sudo systemctl status power-profiles-daemon --no-pager | tee -a "$LOG"
+# Add user to power group for profile switching
+sudo usermod -aG power $USER 2>&1 | tee -a "$LOG"
+echo "${OK} power-profiles-daemon installed!" | tee -a "$LOG"
+
+
 # ============================================
 # OPTIONAL INSTALLATIONS
 # ============================================

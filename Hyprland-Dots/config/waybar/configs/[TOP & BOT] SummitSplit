@@ -22,7 +22,8 @@
 			"temperature#cpu",
 			"temperature#gpu",
 			"memory",
-			"disk"
+			"disk",
+			"power-profiles-daemon"
 		],
 		"modules-center": [
 			"idle_inhibitor",
@@ -35,6 +36,7 @@
 			"custom/playerctl"
 		],
 		"modules-right": [
+			"network#speed",
 			"battery",
 			"tray",
 			"custom/updater",

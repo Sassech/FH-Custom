@@ -282,7 +282,7 @@
 	"network#speed": {
 		"interval": 1,
 		"format": "{ifname}",
-		"format-wifi": "{icon}  {bandwidthUpBytes}  {bandwidthDownBytes}",
+		"format-wifi": "{bandwidthUpBytes}  {bandwidthDownBytes}",
 		"format-ethernet": "󰌘  {bandwidthUpBytes}  {bandwidthDownBytes}",
 		"format-disconnected": "󰌙",
 		"tooltip-format": "{ipaddr}",
@@ -299,7 +299,7 @@
 			"󰤥",
 			"󰤨"
 		]
-	},
+	}, // Power profile management via power-profiles-daemon
 	"power-profiles-daemon": {
 		"format": "{icon} ",
 		"tooltip-format": "Power profile: {profile}\nDriver: {driver}",
@@ -310,7 +310,7 @@
 			"balanced": "",
 			"power-saver": ""
 		}
-	},
+	}, // Speaker volume control for PulseAudio
 	"pulseaudio": {
 		"format": "{icon} {volume}%",
 		"format-bluetooth": "{icon} 󰂰 {volume}%",
@@ -339,7 +339,7 @@
 		"on-scroll-down": "$HOME/.config/hypr/scripts/Volume.sh --dec",
 		"tooltip-format": "{icon} {desc} | {volume}%",
 		"smooth-scrolling-threshold": 1
-	},
+	}, // Speaker volume control for PulseAudio
 	"pulseaudio#1": {
 		"format": "{icon} {volume}%",
 		"format-bluetooth": "{icon} {volume}%",
@@ -362,7 +362,7 @@
 		"on-click-right": "pavucontrol -t 3",
 		"tooltip": true,
 		"tooltip-format": "{icon} {desc} | {volume}%"
-	},
+	}, // Microphone volume control for PulseAudio
 	"pulseaudio#microphone": {
 		"format": "{format_source}",
 		"format-source": " {volume}%",
@@ -377,7 +377,7 @@
 	"tray": {
 		"icon-size": 20,
 		"spacing": 4
-	},
+	}, // Volume control for WirePlumber (PipeWire)
 	"wireplumber": {
 		"format": "{icon} {volume} %",
 		"format-muted": " Mute",
@@ -391,7 +391,7 @@
 			"󰕾",
 			""
 		]
-	},
+	}, // Show open applications in the taskbar
 	"wlr/taskbar": {
 		"format": "{icon} {name}",
 		"icon-size": 16,

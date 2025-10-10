@@ -1,12 +1,12 @@
 /* ----------- 💫 https://github.com/JaKooLit 💫 -------- */
 /* ....[Colorful] Stolen ......... */
 * {
-    font-family: "JetBrainsMono Nerd Font";
-    font-weight: bold;
-	min-height: 0;  
-    /* set font-size to 100% if font scaling is set to 1.00 using nwg-look */
-    font-size: 97%;
-    font-feature-settings: '"zero", "ss01", "ss02", "ss03", "ss04", "ss05", "cv31"';
+  font-family: "JetBrainsMono Nerd Font";
+  font-weight: bold;
+  min-height: 0;
+  /* set font-size to 100% if font scaling is set to 1.00 using nwg-look */
+  font-size: 97%;
+  font-feature-settings: '"zero", "ss01", "ss02", "ss03", "ss04", "ss05", "cv31"';
 }
 
 window#waybar {
@@ -122,7 +122,7 @@ window#waybar.empty #window {
 }
 
 #bluetooth {
-  color: #7aa2f7;
+  color: #99f77a;
 }
 
 #clock {
@@ -177,7 +177,6 @@ window#waybar.empty #window {
 
 #custom-niflveil.empty {
   color: #c0caf5;
-
 }
 
 #cpu {
@@ -211,6 +210,16 @@ window#waybar.empty #window {
   border-top: 2px solid #455a64;
   border-bottom: 2px solid #455a64;
   border-right: 2px solid #455a64;
+  border-radius: 0px;
+}
+
+#power-profiles-daemon {
+  color: #ffffed;
+  padding-left: 10px;
+  padding-right: 10px;
+  border-top: 2px solid #455a64;
+  border-bottom: 2px solid #455a64;
+  border-radius: 20px;
   border-radius: 0px 20px 20px 0px;
 }
 
@@ -235,14 +244,12 @@ window#waybar.empty #window {
 }
 
 #custom-menu {
-
   color: #7dcfff;
   padding-left: 14px;
   padding-right: 12px;
 }
 
 #custom-power {
-
   color: #f7768e;
   padding-left: 8px;
   padding-right: 17px;
@@ -254,7 +261,6 @@ window#waybar.empty #window {
   border-radius: 20px;
   padding-left: 10pt;
   padding-right: 12px;
-
 }
 
 #custom-light_dark {
@@ -263,7 +269,6 @@ window#waybar.empty #window {
 
 #custom-weather {
   color: #9fe044;
-
 }
 
 #custom-speaker {
@@ -272,7 +277,6 @@ window#waybar.empty #window {
 
 #pulseaudio {
   color: #faba4a;
-
 }
 
 #pulseaudio.bluetooth {
