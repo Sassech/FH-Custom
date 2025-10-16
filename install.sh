@@ -1,7 +1,5 @@
 #!/bin/bash
 
-clear
-
 # Set some colors for output messages
 OK="$(tput setaf 2)[OK]$(tput sgr0)"
 ERROR="$(tput setaf 1)[ERROR]$(tput sgr0)"
@@ -19,9 +17,7 @@ SKY_BLUE="$(tput setaf 6)"
 RESET="$(tput sgr0)"
 
 # Create Directory for Install Logs
-if [ ! -d Install-Logs ]; then
-    mkdir Install-Logs
-fi
+mkdir -p Install-Logs
 
 # Set the name of the log file to include the current date and time
 LOG="Install-Logs/01-Hyprland-Install-Scripts-$(date +%d-%H%M%S).log"
@@ -49,8 +45,9 @@ if ! rpm -q pciutils > /dev/null; then
     printf "\n%.0s" {1..1}
 fi
 
-# Path to the install-scripts directory
-script_directory=install-scripts
+# Path to the install-scripts directory (absolute, based on this script's location)
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+script_directory="$script_dir/install-scripts"
 
 # Function to execute a script if it exists and make it executable
 execute_script() {
@@ -59,7 +56,12 @@ execute_script() {
     if [ -f "$script_path" ]; then
         chmod +x "$script_path"
         if [ -x "$script_path" ]; then
-            env "$script_path"
+            echo "${INFO} Running $script..." | tee -a "$LOG"
+            bash "$script_path" >> "$LOG" 2>&1
+            local rc=$?
+            if [ $rc -ne 0 ]; then
+                echo "${WARN} Script '$script' exited with code $rc" | tee -a "$LOG"
+            fi
         else
             echo "Failed to make script '$script' executable." | tee -a "$LOG"
         fi
@@ -147,7 +149,7 @@ if [ "$nvidia_install" == "yes" ]; then
 fi
 
 # Add input_group if user is not in the group
-if ! groups "$(whoami)" | grep -q '\binput\b'; then
+if ! groups "$(whoami)" | grep -qw 'input'; then
     selected_options="input_group $selected_options"
     echo "${INFO} Adding user to input group for Waybar functionality." | tee -a "$LOG"
 fi
@@ -205,7 +207,7 @@ execute_script "nvidia.sh"
 if check_services_running; then
     active_list=$(printf "%s\n" "${active_services[@]}")
     whiptail --title "Error" --msgbox "One of the following login services is running:\n$active_list\n\nPlease stop & disable it or DO not choose SDDM." 12 60
-    exec "$0"     
+    exit 1
 else
     echo "${INFO} Installing and configuring ${SKY_BLUE}SDDM...${RESET}" | tee -a "$LOG"
     execute_script "sddm.sh"
@@ -233,9 +235,9 @@ echo "${INFO} Installing ${SKY_BLUE}xdg-desktop-portal-hyprland...${RESET}" | te
 sleep 1
 execute_script "xdph.sh"
 
-echo "${INFO} Installing ${SKY_BLUE}zsh with Oh-My-Zsh...${RESET}" | tee -a "$LOG"
-sleep 1
-execute_script "zsh.sh"
+# echo "${INFO} Installing ${SKY_BLUE}zsh with Oh-My-Zsh...${RESET}" | tee -a "$LOG"
+# sleep 1
+# execute_script "zsh.sh"
 
 # Perform cleanup
 printf "\n${OK} Performing some clean up.\n"
