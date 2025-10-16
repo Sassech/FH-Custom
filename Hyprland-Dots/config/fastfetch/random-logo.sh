@@ -99,6 +99,7 @@ cat > "$CONFIG_FILE" << EOF
       "keyColor": "#FFFFFF",
       "valueColor": "#00FF00"
     },
+/*
     {
       "type": "uptime",
       "format": "{2}h {3}m",
@@ -113,7 +114,7 @@ cat > "$CONFIG_FILE" << EOF
       "keyColor": "#FFFFFF",
       "valueColor": "#00FF00"
     },
-
+*/
     "break",
 
     /* ======= SECCIÓN 2: HARDWARE ======= */
@@ -145,13 +146,14 @@ cat > "$CONFIG_FILE" << EOF
     "break",
 
     /* ======= SECCIÓN 3: BATERÍA Y LOCALIZACIÓN ======= */
+/*
     {
       "type": "battery",
       "key": "🔋 Battery ",
       "keyColor": "#FFFFFF",
       "valueColor": "#00FF00"
     },
-/*    {
+    {
       "type": "command",
       "key": "☀️ Weather ",
       "text": "curl -s wttr.in/?format=1",
@@ -168,6 +170,7 @@ cat > "$CONFIG_FILE" << EOF
       "keyColor": "#FFFFFF",
       "valueColor": "#00FF00"
     },
+/*
     {
       "type": "command",
       "key": "🌐 IP      ",
@@ -175,7 +178,7 @@ cat > "$CONFIG_FILE" << EOF
       "keyColor": "#FFFFFF",
       "valueColor": "#00FF00"
     },
-
+*/
     "break",
 
     /* ======= SECCIÓN 6: BARRA DE COLORES ABAJO ======= */
