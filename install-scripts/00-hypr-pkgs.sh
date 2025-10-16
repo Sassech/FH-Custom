@@ -6,10 +6,11 @@
 
 # add packages wanted here
 Extra=(
-  # iwlwifi-mvm-firmware.noarch
-  # alsa-sof-firmware
-  micro # terminal text editor (optional, but recommended)
-  flac # FLAC audio codec (optional, but recommended if you use mpd
+  iwlwifi-mvm-firmware # Intel Wireless firmware
+  alsa-utils 
+  alsa-sof-firmware
+  micro # terminal text editor
+  flac # FLAC audio codec
 )
 
 # packages neeeded

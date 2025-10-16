@@ -21,20 +21,48 @@ sudo mkdir -p /usr/share/sddm/themes /usr/share/sddm/faces
 # Install themes
 installed=0
 themes=()
+declare -A install_map
 
 for theme_dir in "$SDDM_THEMES_DIR"/*; do
   theme_name=$(basename "$theme_dir")
-  themes+=("$theme_name")
-  
-  printf "${NOTE} Installing: ${YELLOW}$theme_name${RESET}\n"
-  
-  sudo rm -rf "/usr/share/sddm/themes/$theme_name"
-  sudo cp -r "$theme_dir" "/usr/share/sddm/themes/$theme_name" &>> "$LOG"
-  
+
+  # Determine install directory name. If theme provides install.sh with a target path,
+  # prefer that target (e.g. some themes expect to be installed into 'silent' instead of their repo folder name).
+  install_name="$theme_name"
+  if [ -f "$theme_dir/install.sh" ]; then
+    # Try to extract first occurrence of /usr/share/sddm/themes/<name>
+    target=$(grep -oP '/usr/share/sddm/themes/[^"'"'"'"'"'"' ]+' "$theme_dir/install.sh" | head -n1 || true)
+    if [ -n "$target" ]; then
+      install_name=$(basename "$target")
+    fi
+  fi
+
+  themes+=("$install_name")
+  install_map["$theme_name"]="$install_name"
+
+  printf "${NOTE} Installing: ${YELLOW}$theme_name -> /usr/share/sddm/themes/$install_name${RESET}\n"
+
+  sudo rm -rf "/usr/share/sddm/themes/$install_name"
+  sudo cp -r "$theme_dir" "/usr/share/sddm/themes/$install_name" &>> "$LOG"
+
   echo "${OK} - Installed successfully"
   ((installed++))
-  
-  sudo cp -r "$theme_dir/faces"/* /usr/share/sddm/faces/ &>> "$LOG" 2>/dev/null
+
+  # Copy faces (avatars) into the global faces directory (not inside themes)
+  if [ -d "$theme_dir/faces" ]; then
+    # Only copy files if there are any to avoid cp errors
+    shopt -s nullglob
+    face_files=("$theme_dir/faces"/*)
+    if [ ${#face_files[@]} -gt 0 ]; then
+      sudo cp -r "$theme_dir/faces"/* /usr/share/sddm/faces/ &>> "$LOG" || true
+      echo "${OK} - Faces copied for $install_name" &>> "$LOG"
+    else
+      echo "[NOTE] No face files in $theme_dir/faces" &>> "$LOG"
+    fi
+    shopt -u nullglob
+  else
+    echo "[NOTE] No faces directory for theme $theme_name" &>> "$LOG"
+  fi
   echo
 done
 

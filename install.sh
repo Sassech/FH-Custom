@@ -1,5 +1,4 @@
 #!/bin/bash
-# 
 
 clear
 
@@ -43,20 +42,6 @@ fi
 
 clear
 
-# Ask if the user wants to proceed
-if ! whiptail --title "Proceed with Installation?" \
-    --yesno "Would you like to proceed?" 7 50; then
-    echo -e "\n"
-    echo "❌ ${INFO} You 🫵 chose ${YELLOW}NOT${RESET} to proceed. ${YELLOW}Exiting...${RESET}" | tee -a "$LOG"
-    echo -e "\n"
-    exit 1
-fi
-
-echo "👌 ${OK} 🇵🇭 ${MAGENTA}KooL..${RESET} ${SKY_BLUE}lets continue with the installation...${RESET}" | tee -a "$LOG"
-
-sleep 1
-printf "\n%.0s" {1..1}
-
 # install pciutils if detected not installed. Necessary for detecting GPU
 if ! rpm -q pciutils > /dev/null; then
     echo "pciutils is not installed. Installing..." | tee -a "$LOG"
@@ -82,34 +67,6 @@ execute_script() {
         echo "Script '$script' not found in '$script_directory'." | tee -a "$LOG"
     fi
 }
-
-#################
-## Default values for the options (will be overwritten by preset file if available)
-gtk_themes="OFF"
-bluetooth="OFF"
-thunar="OFF"
-sddm="OFF"
-sddm_theme="OFF"
-xdph="OFF"
-zsh="OFF"
-dots="ON"
-input_group="OFF"
-nvidia="OFF"
-
-# Function to load preset file
-load_preset() {
-    if [ -f "$1" ]; then
-        echo "✅ Loading preset: $1"
-        source "$1"
-    else
-        echo "⚠️ Preset file not found: $1. Using default values."
-    fi
-}
-
-# Check if --preset argument is passed
-if [[ "$1" == "--preset" && -n "$2" ]]; then
-    load_preset "$2"
-fi
 
 # List of services to check for active login managers
 services=("gdm.service" "gdm3.service" "lightdm.service" "lxdm.service")
@@ -201,103 +158,84 @@ if ! check_services_running; then
     echo "${INFO} SDDM login manager will be installed." | tee -a "$LOG"
 fi
 
-# Show what will be installed
-whiptail --title "Installation Summary" --msgbox "The following components will be installed:\n\n- Hyprland and dependencies\n- GTK themes\n- Bluetooth support\n- Thunar file manager\n- XDG Desktop Portal\n- Zsh with Oh-My-Zsh\n- Customized dotfiles\n- SDDM login manager (if applicable)\n- NVIDIA drivers (if selected)\n- Input group configuration (if needed)\n\nPress OK to continue..." 20 70
-
-echo "👌 ${OK} Proceeding with ${SKY_BLUE}Hyprland Installation...${RESET}" | tee -a "$LOG"
-
-printf "\n%.0s" {1..1}
-
-echo "${INFO} Adding ${SKY_BLUE}some COPR repos...${RESET}" | tee -a "$LOG"
-sleep 1
-execute_script "copr.sh"
-
 echo "${INFO} Installing ${SKY_BLUE}necessary dependencies...${RESET}" | tee -a "$LOG"
 sleep 1
 execute_script "00-hypr-pkgs.sh"
-
-echo "${INFO} Installing ${SKY_BLUE}necessary fonts...${RESET}" | tee -a "$LOG"
-sleep 1
-execute_script "fonts.sh"
-
-echo "${INFO} Installing ${SKY_BLUE}Hyprland...${RESET}" | tee -a "$LOG"
-sleep 1
-execute_script "hyprland.sh"
 
 echo "${INFO} Installing ${SKY_BLUE}Battery Monitor...${RESET}" | tee -a "$LOG"
 sleep 1
 execute_script "battery-monitor.sh"
 
-echo "${INFO} Installing ${SKY_BLUE}Temperature Monitor...${RESET}" | tee -a "$LOG"
+echo "${INFO} Configuring ${SKY_BLUE}Bluetooth...${RESET}" | tee -a "$LOG"
 sleep 1
-execute_script "temp-monitor.sh"
+execute_script "bluetooth.sh"
+
+echo "${INFO} Adding ${SKY_BLUE}some COPR repos...${RESET}" | tee -a "$LOG"
+sleep 1
+execute_script "copr.sh"
 
 echo "${INFO} Installing ${SKY_BLUE}Disk Space Monitor...${RESET}" | tee -a "$LOG"
 sleep 1
 execute_script "disk-monitor.sh"
 
+echo "${INFO} Installing ${SKY_BLUE}customized Hyprland dotfiles...${RESET}" | tee -a "$LOG"
+sleep 1
+execute_script "dotfiles-main.sh"
+
+echo "${INFO} Installing ${SKY_BLUE}necessary fonts...${RESET}" | tee -a "$LOG"
+sleep 1
+execute_script "fonts.sh"
+
+echo "${INFO} Installing ${SKY_BLUE}GTK themes...${RESET}" | tee -a "$LOG"
+sleep 1
+execute_script "gtk_themes.sh"
+
+echo "${INFO} Installing ${SKY_BLUE}Hyprland...${RESET}" | tee -a "$LOG"
+sleep 1
+execute_script "hyprland.sh"
+
+echo "${INFO} Adding user into ${SKY_BLUE}input group...${RESET}" | tee -a "$LOG"
+sleep 1
+execute_script "InputGroup.sh"
+
+echo "${INFO} Configuring ${SKY_BLUE}nvidia stuff${RESET}" | tee -a "$LOG"
+sleep 1
+execute_script "nvidia.sh"
+
+if check_services_running; then
+    active_list=$(printf "%s\n" "${active_services[@]}")
+    whiptail --title "Error" --msgbox "One of the following login services is running:\n$active_list\n\nPlease stop & disable it or DO not choose SDDM." 12 60
+    exec "$0"     
+else
+    echo "${INFO} Installing and configuring ${SKY_BLUE}SDDM...${RESET}" | tee -a "$LOG"
+    execute_script "sddm.sh"
+fi
+
+echo "${INFO} Downloading & Installing ${SKY_BLUE}Additional SDDM theme...${RESET}" | tee -a "$LOG"
+sleep 1
+execute_script "sddm_theme.sh"
+
 # echo "${INFO} Setting up ${SKY_BLUE}DNS-over-HTTPS with Cloudflare...${RESET}" | tee -a "$LOG"
 # sleep 1
 # execute_script "setup_doh.sh"
 
-# Convert selected options into an array (splitting by spaces)
-IFS=' ' read -r -a options <<< "$selected_options"
+echo "${INFO} Installing ${SKY_BLUE}Temperature Monitor...${RESET}" | tee -a "$LOG"
+sleep 1
+execute_script "temp-monitor.sh"
 
-# Loop through selected options
-for option in "${options[@]}"; do
-    case "$option" in
-        sddm)
-            if check_services_running; then
-                active_list=$(printf "%s\n" "${active_services[@]}")
-                whiptail --title "Error" --msgbox "One of the following login services is running:\n$active_list\n\nPlease stop & disable it or DO not choose SDDM." 12 60
-                exec "$0"  
-            else
-                echo "${INFO} Installing and configuring ${SKY_BLUE}SDDM...${RESET}" | tee -a "$LOG"
-                execute_script "sddm.sh"
-            fi
-            ;;
-        nvidia)
-            echo "${INFO} Configuring ${SKY_BLUE}nvidia stuff${RESET}" | tee -a "$LOG"
-            execute_script "nvidia.sh"
-            ;;
-        gtk_themes)
-            echo "${INFO} Installing ${SKY_BLUE}GTK themes...${RESET}" | tee -a "$LOG"
-            execute_script "gtk_themes.sh"
-            ;;
-        input_group)
-            echo "${INFO} Adding user into ${SKY_BLUE}input group...${RESET}" | tee -a "$LOG"
-            execute_script "InputGroup.sh"
-            ;;
-        xdph)
-            echo "${INFO} Installing ${SKY_BLUE}xdg-desktop-portal-hyprland...${RESET}" | tee -a "$LOG"
-            execute_script "xdph.sh"
-            ;;
-        bluetooth)
-            echo "${INFO} Configuring ${SKY_BLUE}Bluetooth...${RESET}" | tee -a "$LOG"
-            execute_script "bluetooth.sh"
-            ;;
-        thunar)
-            echo "${INFO} Installing ${SKY_BLUE}Thunar file manager...${RESET}" | tee -a "$LOG"
-            execute_script "thunar.sh"
-            execute_script "thunar_default.sh"
-            ;;
-        sddm_theme)
-            echo "${INFO} Downloading & Installing ${SKY_BLUE}Additional SDDM theme...${RESET}" | tee -a "$LOG"
-            execute_script "sddm_theme.sh"
-            ;;
-        zsh)
-            echo "${INFO} Installing ${SKY_BLUE}zsh with Oh-My-Zsh...${RESET}" | tee -a "$LOG"
-            execute_script "zsh.sh"
-            ;;
-        dots)
-            echo "${INFO} Installing ${SKY_BLUE}customized Hyprland dotfiles...${RESET}" | tee -a "$LOG"
-            execute_script "dotfiles-main.sh"
-            ;;
-        *)
-            echo "Unknown option: $option" | tee -a "$LOG"
-            ;;
-    esac
-done
+echo "${INFO} Installing ${SKY_BLUE}Thunar file manager...${RESET}" | tee -a "$LOG"
+sleep 1
+execute_script "thunar.sh"
+sleep 1
+execute_script "thunar_default.sh"
+
+echo "${INFO} Installing ${SKY_BLUE}xdg-desktop-portal-hyprland...${RESET}" | tee -a "$LOG"
+sleep 1
+execute_script "xdph.sh"
+
+echo "${INFO} Installing ${SKY_BLUE}zsh with Oh-My-Zsh...${RESET}" | tee -a "$LOG"
+sleep 1
+execute_script "zsh.sh"
 
 # Perform cleanup
 printf "\n${OK} Performing some clean up.\n"
