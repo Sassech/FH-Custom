@@ -236,9 +236,9 @@ echo "${INFO} Installing ${SKY_BLUE}Disk Space Monitor...${RESET}" | tee -a "$LO
 sleep 1
 execute_script "disk-monitor.sh"
 
-echo "${INFO} Setting up ${SKY_BLUE}DNS-over-HTTPS with Cloudflare...${RESET}" | tee -a "$LOG"
-sleep 1
-execute_script "setup_doh.sh"
+# echo "${INFO} Setting up ${SKY_BLUE}DNS-over-HTTPS with Cloudflare...${RESET}" | tee -a "$LOG"
+# sleep 1
+# execute_script "setup_doh.sh"
 
 # Convert selected options into an array (splitting by spaces)
 IFS=' ' read -r -a options <<< "$selected_options"

@@ -91,12 +91,13 @@ printf "\n%.0s" {1..1}
 
 # 1. WiFi Firmware and NetworkManager
 echo "${INFO} Installing WiFi firmware and NetworkManager-wifi..." | tee -a "$LOG"
-sudo dnf install -y linux-firmware 2>&1 | tee -a "$LOG"
+sudo dnf install -y linux-firmware iwlwifi-mvm-firmware 2>&1 | tee -a "$LOG"
 echo "${INFO} Reloading iwlwifi module..." | tee -a "$LOG"
 sudo modprobe -r iwlwifi 2>&1 | tee -a "$LOG"
 sudo modprobe iwlwifi 2>&1 | tee -a "$LOG"
 sudo dnf install -y NetworkManager-wifi 2>&1 | tee -a "$LOG"
 sudo dnf install -y wpa_supplicant 2>&1 | tee -a "$LOG"
+sudo dnf install -y pixiewps 2>&1 | tee -a "$LOG"
 echo "${INFO} Restarting NetworkManager..." | tee -a "$LOG"
 sudo systemctl restart NetworkManager 2>&1 | tee -a "$LOG"
 echo "${OK} WiFi firmware and NetworkManager-wifi installed!" | tee -a "$LOG"

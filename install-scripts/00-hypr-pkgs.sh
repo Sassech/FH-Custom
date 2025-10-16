@@ -11,7 +11,6 @@ Extra=(
   # alsa-sof-firmware
   micro # terminal text editor (optional, but recommended)
   flac # FLAC audio codec (optional, but recommended if you use mpd
-  pixiewps # for wifi (optional, but recommended)
 )
 
 # packages neeeded

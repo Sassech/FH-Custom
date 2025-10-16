@@ -1,0 +1,83 @@
+Muy buena decisión: “empezar de cero” puede limpiar errores acumulados. Aquí te doy un plan paso a paso — con comandos — para borrar lo que instalaste mal hasta ahora y reinstalar el firmware + controladores de red WiFi limpios. Te recomiendo seguir con cuidado, copiar lo que necesites, y hacer respaldo si algo va mal.
+
+---
+
+## Plan para “borrar todo y reinstalar”
+
+Asumiré que usas una distribución tipo Fedora (porque usaste `dnf`). Si no es Fedora, dime para ajustar los comandos.
+
+### 1. Remover los archivos de firmware modificados / manuales
+
+Queremos eliminar los posibles restos que puedan estar “rompiendo” la carga del firmware.
+
+```bash
+sudo rm -f /lib/firmware/iwlwifi-QuZ-a0-hr-b0-77.ucode
+sudo rm -f /lib/firmware/iwlwifi-QuZ-a0-hr-b0-77.ucode.xz
+sudo rm -f /usr/lib/firmware/iwlwifi-QuZ-a0-hr-b0-77.ucode
+sudo rm -f /usr/lib/firmware/iwlwifi-QuZ-a0-hr-b0-77.ucode.xz
+```
+
+También, si agregaste manualmente otras versiones o renombraste archivos, remuévelos.
+
+### 2. Reinstalar paquetes oficiales de firmware
+
+Esto asegura que recuperes el conjunto estándar de firmware de tu distribución.
+
+```bash
+sudo dnf reinstall linux-firmware iwlwifi-mvm-firmware
+```
+
+Dependiendo de tu versión de Fedora, podrías necesitar además:
+
+```bash
+sudo dnf install --allowerasing iwlwifi-dvm-firmware
+```
+
+o instalar paquetes relacionados que contengan firmware Intel WiFi. (Fedora divide paquetes de firmware en subpaquetes en algunas versiones).
+
+Comprueba que los paquetes existan en los repositorios de tu versión:
+
+```bash
+dnf list linux-firmware iwlwifi-mvm-firmware iwlwifi-dvm-firmware
+```
+
+### 3. Reconstruir el initramfs / imagen de arranque (opcional pero recomendado)
+
+Para que el firmware correcto quede incluido al iniciar:
+
+```bash
+sudo dracut --force
+```
+
+(En algunas distros es `mkinitrd` o `mkinitcpio`, pero en Fedora lo más común es `dracut`).
+
+### 4. Recargar el módulo iwlwifi
+
+Después de haber reinstalado el firmware oficial:
+
+```bash
+sudo modprobe -r iwlwifi
+sudo modprobe iwlwifi
+```
+
+O simplemente reinicia la computadora:
+
+```bash
+sudo reboot
+```
+
+### 5. Verificar el estado y los logs
+
+Después de recargar / reiniciar, revisa:
+
+```bash
+nmcli device status
+dmesg | grep -i iwlwifi
+dmesg | grep -i firmware
+```
+
+Deberías ver que el firmware se carga sin errores (“loaded firmware version …”) y que tu tarjeta de red aparezca como dispositivo (tipo `wlan0`, `wlp…`, etc.).
+
+---
+
+Si lo quieres, puedo generarte un script completo que ejecute todos esos pasos (borrar, reinstalar, reconstruir initramfs, recargar) para tu sistema, y tú solo lo pegues y ejecutes. ¿Te lo preparo?
